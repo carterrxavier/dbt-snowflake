@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: raw_transactions_data
+    description: "Transactions data from the xrc bank platform"
+    database: "{{ env_var('SNOWFLAKE_SOURCE_DATABASE', 'S3_INTEGRATION_DB') }}"
+    schema: "{{ env_var('SNOWFLAKE_SOURCE_SCHEMA', 'PUBLIC') }}"
+    
+    tables:
+      - name: RAW_FRAUD_DECISIONS
+        identifier: RAW_FRAUD_DECISIONS
+        description: "Fraud decisions made by the xrc bank platform"
+
+      - name: RAW_TRANSACTIONS  
+        identifier: RAW_TRANSACTIONS
+        description: "Transactions data from the xrc bank platform"

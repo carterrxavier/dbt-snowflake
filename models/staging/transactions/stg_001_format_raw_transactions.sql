@@ -1,0 +1,1 @@
+select * from {{ source('raw_transactions_data', 'RAW_TRANSACTIONS') }}

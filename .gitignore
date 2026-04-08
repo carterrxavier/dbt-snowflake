@@ -1,3 +1,19 @@
+.DS_Store
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.python-version
+
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+
+# local profiles (do not commit credentials)
+profiles.yml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

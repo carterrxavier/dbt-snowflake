@@ -1,0 +1,27 @@
+name: "snowflake_analytics"
+version: "1.0.0"
+config-version: 2
+
+profile: "dbt_snowflake"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  snowflake_analytics:
+    +materialized: view
+    staging:
+      transactions:
+        +materialized: view
+        +schema: DBT_MODELS_STAGING_TRANSACTIONS
+      fraud:
+        +materialized: view
+        +schema: DBT_MODELS_STAGING_FRAUD
