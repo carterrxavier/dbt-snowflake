@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: stg_001_format_raw_transactions
+    description: "Typed/stabilized view of raw transactions."
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        tests:
+          - not_null

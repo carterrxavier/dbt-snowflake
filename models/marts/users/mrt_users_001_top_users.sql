@@ -1,0 +1,1 @@
+select * from {{ ref('stg_001_format_fraud_records') }} 

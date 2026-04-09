@@ -21,7 +21,11 @@ models:
     staging:
       transactions:
         +materialized: view
-        +schema: DBT_MODELS_STAGING_TRANSACTIONS
+        +schema: STAGING_TRANSACTIONS
       fraud:
         +materialized: view
-        +schema: DBT_MODELS_STAGING_FRAUD
+        +schema: STAGING_FRAUD
+    marts:
+      users:
+        +materialized: view
+        +schema: MRTS_USERS
