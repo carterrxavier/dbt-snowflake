@@ -1,6 +1,6 @@
 with src as (
     select raw as j
-    from {{ source('raw_transactions_data', 'RAW_USERS') }}
+    from {{ source('raw_transactions_data', 'RAW_USER_PROFILES') }}
 )
 
 select
