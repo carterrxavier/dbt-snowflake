@@ -25,6 +25,9 @@ models:
       fraud:
         +materialized: view
         +schema: STAGING_FRAUD
+      users:
+        +materialized: view
+        +schema: STAGING_USERS
     marts:
       users:
         +materialized: view

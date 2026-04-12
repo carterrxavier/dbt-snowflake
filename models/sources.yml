@@ -14,3 +14,7 @@ sources:
       - name: RAW_TRANSACTIONS  
         identifier: RAW_TRANSACTIONS
         description: "Transactions data from the xrc bank platform"
+
+      - name: RAW_USERS
+        identifier: RAW_USERS
+        description: "Users data from the xrc bank platform"  

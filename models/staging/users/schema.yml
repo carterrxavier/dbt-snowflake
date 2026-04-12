@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: stg_001_format_raw_users
+    description: "Typed columns from RAW_USERS JSON (VARIANT v)."
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique
