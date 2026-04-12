@@ -27,3 +27,4 @@ select
     try_to_date(j:date_of_birth::string) as date_of_birth
 
 from src
+where j:state::string not in ('AP','AA','AE')
