@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-    # Minute 6 past 12, 15, 18, 21, and 0 UTC (five runs per day; all times UTC)
-    - cron: "6 12,15,18,21,0 * * *"
+    # polling every 30 minutes
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 env:
