@@ -29,8 +29,29 @@ transactions as (
     where _txn_rn = 1
 ),
 
-users as (
+users_raw as (
     select * from {{ ref("stg_001_format_raw_users") }}
+),
+
+users as (
+    select
+        user_id,
+        segment,
+        state,
+        avg_spending
+    from (
+        select
+            user_id,
+            segment,
+            state,
+            avg_spending,
+            row_number() over (
+                partition by user_id
+                order by customer_since desc nulls last, full_name nulls last
+            ) as _user_rn
+        from users_raw
+    )
+    where _user_rn = 1
 ),
 
 segment_txn_avg as (

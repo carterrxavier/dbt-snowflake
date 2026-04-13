@@ -4,7 +4,8 @@ models:
   - name: fct_transactions_001_transactions
     description: >
       One row per transaction_id with user/segment context and high-amount flags.
-      Raw can contain duplicate transaction_id; this model keeps the latest row by transaction_ts.
+      Transactions: if duplicate transaction_id exists in staging, keep latest by transaction_ts.
+      Users: if duplicate user_id exists in staging, keep one row (latest customer_since) so joins do not fan out.
     columns:
       - name: transaction_id
         tests:
