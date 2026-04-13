@@ -2,8 +2,8 @@
 
 select
     date(t.transaction_ts) as activity_date,
-    coalesce(u.segment, 'Unknown') as segment,
-    coalesce(u.state, 'Unknown') as state,
+    coalesce(t.user_segment, 'Unknown') as segment,
+    coalesce(t.user_state, 'Unknown') as state,
     coalesce(t.transaction_type, 'Unknown') as transaction_type,
 
     count(*) as txn_count,
@@ -11,7 +11,6 @@ select
     count(distinct t.user_id) as distinct_users,
     div0(sum(t.amount), count(*)) as aov
 
-from {{ ref("stg_001_format_raw_transactions") }} t
-left join {{ ref("stg_001_format_raw_users") }} u on t.user_id = u.user_id
+from {{ ref("fct_transactions_001_transactions") }} t
 where t.transaction_ts is not null
 group by 1, 2, 3, 4

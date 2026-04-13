@@ -1,7 +1,32 @@
 {{ config(tags=["transactions", "fact"]) }}
 
-with transactions as (
+with transactions_raw as (
     select * from {{ ref("stg_001_format_raw_transactions") }}
+),
+
+transactions as (
+    select
+        transaction_id,
+        user_id,
+        device_id,
+        transaction_type,
+        merchant,
+        amount,
+        avg_spending,
+        latitude,
+        longitude,
+        sim_anomaly_type,
+        transaction_ts
+    from (
+        select
+            transactions_raw.*,
+            row_number() over (
+                partition by transaction_id
+                order by transaction_ts desc nulls last
+            ) as _txn_rn
+        from transactions_raw
+    )
+    where _txn_rn = 1
 ),
 
 users as (

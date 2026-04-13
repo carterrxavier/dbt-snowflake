@@ -2,7 +2,9 @@ version: 2
 
 models:
   - name: fct_transactions_001_transactions
-    description: "One row per transaction with user/segment context and high-amount flags."
+    description: >
+      One row per transaction_id with user/segment context and high-amount flags.
+      Raw can contain duplicate transaction_id; this model keeps the latest row by transaction_ts.
     columns:
       - name: transaction_id
         tests:
@@ -26,3 +28,4 @@ models:
         tests:
           - not_null
           - unique
+
