@@ -4,7 +4,7 @@ sources:
   - name: raw_transactions_data
     description: "Transactions data from the xrc bank platform"
     database: "{{ env_var('SNOWFLAKE_SOURCE_DATABASE', 'S3_INTEGRATION_DB') }}"
-    schema: "{{ env_var('SNOWFLAKE_SOURCE_SCHEMA', 'PUBLIC') }}"
+    schema: "{{ env_var('SNOWFLAKE_SOURCE_RAW_SCHEMA', 'PUBLIC') }}"
     
     tables:
       - name: RAW_FRAUD_DECISIONS
