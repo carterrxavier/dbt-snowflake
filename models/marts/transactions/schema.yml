@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: fct_transactions_001_transactions
+    description: "One row per transaction with user/segment context and high-amount flags."
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        tests:
+          - not_null
+
+  - name: mrt_transactions_001_agg_transactions_daily
+    description: "Daily transaction metrics by segment, state, and transaction type."
+    columns:
+      - name: activity_date
+        tests:
+          - not_null
+
+  - name: mrt_transactions_001_agg_transactions_by_user
+    description: "Lifetime and last-30-day spend per user."
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique

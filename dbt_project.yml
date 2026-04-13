@@ -29,6 +29,9 @@ models:
         +materialized: view
         +schema: STAGING_USERS
     marts:
+      transactions:
+        +materialized: view
+        +schema: MRTS_TRANSACTIONS
       users:
         +materialized: view
         +schema: MRTS_USERS

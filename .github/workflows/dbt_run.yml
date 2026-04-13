@@ -161,5 +161,4 @@ jobs:
           dbt debug
           dbt clean
           dbt deps
-          dbt build
-          dbt docs generate
+          dbt run
