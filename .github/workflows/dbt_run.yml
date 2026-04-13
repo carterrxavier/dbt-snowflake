@@ -1,0 +1,165 @@
+name: Run dbt models
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Minute 6 past 12, 15, 18, 21, and 0 UTC (five runs per day; all times UTC)
+    - cron: "6 12,15,18,21,0 * * *"
+  workflow_dispatch:
+
+env:
+  DBT_PROFILES_DIR: ${{ github.workspace }}/.dbt
+
+jobs:
+  run-dbt-on-push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install awscli
+
+      - name: Install dbt profile
+        run: |
+          mkdir -p "$DBT_PROFILES_DIR"
+          cp profiles.yml.example "$DBT_PROFILES_DIR/profiles.yml"
+
+      - name: Find changed paths under models/
+        id: changed
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "Using HEAD~1..HEAD (no valid github.event.before)"
+            RANGE="HEAD~1 HEAD"
+          else
+            RANGE="$BEFORE $AFTER"
+          fi
+
+          mapfile -t files < <(git diff --name-only $RANGE -- "models/" 2>/dev/null || true)
+          prefixes=()
+          for f in "${files[@]}"; do
+            [[ "$f" == models/* ]] || continue
+            rel="${f#models/}"
+            if [[ "$rel" == */* ]]; then
+              prefixes+=("models/${rel%%/*}")
+            else
+              prefixes+=("models")
+            fi
+          done
+
+          if [ "${#prefixes[@]}" -eq 0 ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under models/ in this push."
+            exit 0
+          fi
+
+          selectors=""
+          while IFS= read -r p; do
+            [ -z "$p" ] && continue
+            selectors="${selectors} path:${p}"
+          done < <(printf '%s\n' "${prefixes[@]}" | sort -u)
+          selectors="${selectors# }"
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "selectors<<DBT_SELECTORS"
+            echo "$selectors"
+            echo "DBT_SELECTORS"
+          } >> "$GITHUB_OUTPUT"
+          echo "Will run: dbt build -s $selectors"
+
+      - name: dbt (push — changed paths only)
+        if: steps.changed.outputs.has_changes == 'true'
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+          SNOWFLAKE_SOURCE_DATABASE: ${{ secrets.SNOWFLAKE_SOURCE_DATABASE }}
+          SNOWFLAKE_SOURCE_SCHEMA: ${{ secrets.SNOWFLAKE_SOURCE_SCHEMA }}
+        run: |
+          dbt debug
+          dbt clean
+          dbt deps
+          dbt build -s ${{ steps.changed.outputs.selectors }}
+          dbt docs generate
+
+      - name: Skip dbt (no model changes)
+        if: steps.changed.outputs.has_changes != 'true'
+        run: echo "Skipping dbt; no files under models/ changed in this push."
+
+      - name: Upload dbt docs to S3
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          if [ ! -d "./target" ]; then
+            echo "Expected ./target after dbt docs generate"
+            exit 1
+          fi
+          aws s3 sync ./target "s3://xrc-bank-data/dbt-snowflake/"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+  run-dbt-on-schedule:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install dbt profile
+        run: |
+          mkdir -p "$DBT_PROFILES_DIR"
+          cp profiles.yml.example "$DBT_PROFILES_DIR/profiles.yml"
+
+      - name: dbt (schedule / manual — full project)
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+          SNOWFLAKE_SOURCE_DATABASE: ${{ secrets.SNOWFLAKE_SOURCE_DATABASE }}
+          SNOWFLAKE_SOURCE_SCHEMA: ${{ secrets.SNOWFLAKE_SOURCE_SCHEMA }}
+        run: |
+          dbt debug
+          dbt clean
+          dbt deps
+          dbt build
+          dbt docs generate
