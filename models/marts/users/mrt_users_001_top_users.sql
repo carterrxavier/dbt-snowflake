@@ -1,1 +1,1 @@
-select * from {{ ref('stg_001_format_raw_users') }} 
+select * from {{ ref('stg_001_format_raw_users') }} limit 10
