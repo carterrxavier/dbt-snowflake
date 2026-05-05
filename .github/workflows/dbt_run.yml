@@ -23,11 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Write Snowflake key
+      - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY_PEM: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
-          printf '%s\n' "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > /tmp/rsa_key.p8
+          printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY_PEM" > /tmp/rsa_key.p8
           chmod 600 /tmp/rsa_key.p8
-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -136,9 +137,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Write Snowflake key
+      - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY_PEM: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
-          printf '%s\n' "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > /tmp/rsa_key.p8
+          printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY_PEM" > /tmp/rsa_key.p8
           chmod 600 /tmp/rsa_key.p8
 
       - name: Set up Python
